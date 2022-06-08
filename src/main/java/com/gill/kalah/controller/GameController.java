@@ -1,5 +1,6 @@
-package com.gill.kalah.controller;
+ package com.gill.kalah.controller;
 
+import com.gill.kalah.DTO.StateDTO;
 import com.gill.kalah.exception.GameException;
 import com.gill.kalah.model.State;
 import com.gill.kalah.service.GameService;
@@ -21,27 +22,27 @@ public class GameController {
         return "index";
     }
 
-    @GetMapping("/getGameState")
-    public  @ResponseBody ResponseEntity<State> getGameState(){
-        System.out.println(java.util.UUID.randomUUID());
-        return new ResponseEntity<>(gameService.getGameState(), HttpStatus.OK);
+    @GetMapping("/getGameState/{key}")
+    public  @ResponseBody ResponseEntity<StateDTO> getGameState(@PathVariable("key") String key){
+        System.out.println();
+        return new ResponseEntity<>(gameService.getGameState(key), HttpStatus.OK);
     }
 
     @GetMapping("/newGame")
     public @ResponseBody
     ResponseEntity startNewGame() {
         try {
-            return new ResponseEntity<State>(gameService.startNewGame(), HttpStatus.OK);
+            return new ResponseEntity<StateDTO>(gameService.startNewGame(), HttpStatus.OK);
         } catch (GameException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    @GetMapping("/play/{box}")
+    @GetMapping("/play/{key}/{box}")
     public @ResponseBody
-    ResponseEntity play(@PathVariable("box") int box) {
+    ResponseEntity play(@PathVariable("key") String key , @PathVariable("box") int box) {
         try {
-            return new ResponseEntity<State>(gameService.play(box), HttpStatus.OK);
+            return new ResponseEntity<StateDTO>(gameService.play(key, box), HttpStatus.OK);
         } catch (GameException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

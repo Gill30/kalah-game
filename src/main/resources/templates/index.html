@@ -6,6 +6,7 @@
     <script>
     var winModal = undefined;
     var ableStartIdx, ableEndIdx, disableStartIdx, disableEndIdx;
+    var sessionKey = undefined;
 <!--    var status = localStorage.getItem("status");-->
 <!--    var board = localStorage.getItem("board")?.split(",");-->
     var status = '';
@@ -24,13 +25,14 @@
     // event handler for click on box
     $(".box").click(function(){
         let id = this.id;
-        let url = "/play/"+id
+        let url = "/play/"+sessionKey+"/"+id
         $.get(url,function(data, status){
         if(status && status == "success" && data.gameStatus && data.board){
 <!--            localStorage.setItem("status", data.gameStatus)-->
 <!--            localStorage.setItem("board", data.board)-->
             status  = data.gameStatus
             board = data.board;
+            sessionKey = data.key;
             if(status == "P1WON" || status == "P2WON"){
                 handleWinner(status, board);
             }
@@ -83,6 +85,7 @@
 <!--                localStorage.setItem("board", data.board)-->
                 status  = data.gameStatus
                 board = data.board;
+                sessionKey = data.key;
                 updateStatus(status)
                 $("#newGamebtn").addClass("d-none")
                 $("#gameBoard").removeClass("d-none")

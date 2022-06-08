@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 public class State {
     private int[] board;
     private GameStatus gameStatus;
+
     public State() {
         this.gameStatus = GameStatus.NEW;
         this.board = new int[]{6, 6, 6, 6, 6, 6, 0, 6, 6, 6, 6, 6, 6, 0};
@@ -26,4 +27,5 @@ public class State {
     public void setGameStatus(GameStatus gameStatus){
         this.gameStatus = gameStatus;
     }
+
 }

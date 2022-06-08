@@ -1,5 +1,8 @@
 package com.gill.kalah.DAO;
 
+import com.gill.kalah.Assembler.StateToStateDTOAssembler;
+import com.gill.kalah.DTO.StateDTO;
+import com.gill.kalah.cache.CacheManager;
 import com.gill.kalah.exception.GameException;
 import com.gill.kalah.model.GameStatus;
 import com.gill.kalah.model.State;
@@ -14,15 +17,16 @@ public class StateManager {
     private final int P1_KALAH = 6;
     private final int P2_KALAH = 13;
 
-    @Autowired
-    private State gameState;
 
-    public State initializeGame() throws GameException {
-        synchronized (gameState) {
-            gameState = new State();
-            gameState.setGameStatus(GameStatus.P1);
-        }
-        return gameState;
+
+
+    public StateDTO initializeGame() throws GameException {
+        String key = null;
+        State gameState = new State();
+        gameState.setGameStatus(GameStatus.P1);
+        key = java.util.UUID.randomUUID().toString();
+        CacheManager.getInstance().cache.put(key, gameState);
+        return StateToStateDTOAssembler.stateToStateDTO(gameState, key);
     }
 
     /**
@@ -31,12 +35,16 @@ public class StateManager {
      * @param box box player have selected for turn.
      * @return state
      */
-    public State play( int box) throws GameException {
-        State state = this.gameState;
+    public StateDTO play( String key, int box) throws GameException {
+
+        State state = CacheManager.getInstance().cache.getOrDefault(key, null);
+        if(state == null){
+            throw new GameException("Invalid Session key");
+        }
         GameStatus oppositePlayer = null;
         int oppositePlayerKalah = 0;
         int currentPlayerKalah = 0;
-        GameStatus currentStatus = this.gameState.getGameStatus();
+        GameStatus currentStatus = state.getGameStatus();
         if(currentStatus == GameStatus.P1){
             oppositePlayer = GameStatus.P2;
             currentPlayerKalah  = P1_KALAH;
@@ -48,16 +56,16 @@ public class StateManager {
         }
 
         validateMove(state,  box);
-        synchronized (gameState) {
-            int index = updatedBoard(state, oppositePlayerKalah, box);
+        synchronized (state) {
+            int index = updateBoard(state, oppositePlayerKalah, box);
 
             if (index == currentPlayerKalah) {
                 //need to re check logic here
                 if (isGameOver(state)) {
                     state = this.endGame(state);
                 }
-                this.gameState = state;
-                return this.gameState;
+                CacheManager.getInstance().cache.put(key, state);
+                return StateToStateDTOAssembler.stateToStateDTO(state, key);
             } else if (state.getBoard()[index] == 1) {
                 state = oppositeBoxStoneCollMoveCheck(state, index, currentPlayerKalah);
             }
@@ -66,9 +74,9 @@ public class StateManager {
             } else {
                 state.setGameStatus(oppositePlayer);
             }
-            this.gameState = state;
         }
-        return this.gameState;
+        CacheManager.getInstance().cache.put(key, state);
+        return StateToStateDTOAssembler.stateToStateDTO(state, key);
     }
 
     public State endGame(State state)  {
@@ -120,7 +128,7 @@ public class StateManager {
      * @param box           Which pit player is starting to sow stones from.
      * @return Returns the ID of the pit where it puts its last stone.
      */
-    protected int updatedBoard(State state, int opponentKalah, int box) {
+    protected int updateBoard(State state, int opponentKalah, int box) {
         int[] board = state.getBoard();
         int stoneCount = board[box];
         int currentIndex = box;
@@ -185,11 +193,9 @@ public class StateManager {
         return state;
     }
 
-    public void setGameState(State state){
-        this.gameState = state;
-    }
 
-    public State getGameState() {
-        return this.gameState;
+    public StateDTO getGameState(String key) {
+        State state = CacheManager.getInstance().cache.get(key);
+        return StateToStateDTOAssembler.stateToStateDTO(state, key);
     }
 }

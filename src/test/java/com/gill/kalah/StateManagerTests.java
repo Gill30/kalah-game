@@ -1,6 +1,8 @@
 package com.gill.kalah;
 
 import com.gill.kalah.DAO.StateManager;
+import com.gill.kalah.DTO.StateDTO;
+import com.gill.kalah.cache.CacheManager;
 import com.gill.kalah.exception.GameException;
 import com.gill.kalah.model.GameStatus;
 import com.gill.kalah.model.State;
@@ -26,7 +28,8 @@ public class StateManagerTests {
     public void setupTest(){
         gameState.setGameStatus(GameStatus.P1);
         gameState.setBoard(new int[]{6, 6, 6, 6, 6, 6, 0, 6, 6, 6, 6, 6, 6, 0});
-        stateManager.setGameState(gameState);
+        CacheManager.getInstance().cache.put("test", gameState);
+
     }
 
     @DisplayName("initializeGameTest")
@@ -37,7 +40,7 @@ public class StateManagerTests {
         State expectedState = new State();
         expectedState.setGameStatus(GameStatus.P1);
         expectedState.setBoard(new int[]{6, 6, 6, 6, 6, 6, 0, 6, 6, 6, 6, 6, 6, 0});
-        State resultState = stateManager.initializeGame();
+        StateDTO resultState = stateManager.initializeGame();
         Assertions.assertArrayEquals(resultState.getBoard(), expectedState.getBoard());
         Assertions.assertEquals(resultState.getGameStatus(), expectedState.getGameStatus());
 
@@ -60,7 +63,7 @@ public class StateManagerTests {
         State expectedState = new State();
         expectedState.setGameStatus(GameStatus.P1);
         expectedState.setBoard(new int[]{0, 7, 7, 7, 7, 7, 1, 6, 6, 6, 6, 6, 6, 0});
-        State resultState = stateManager.play(0);
+        StateDTO resultState = stateManager.play("test", 0);
         Assertions.assertArrayEquals(resultState.getBoard(), expectedState.getBoard());
         Assertions.assertEquals(resultState.getGameStatus(), expectedState.getGameStatus());
 
@@ -69,7 +72,7 @@ public class StateManagerTests {
         expectedState.setGameStatus(GameStatus.P2);
         expectedState.setBoard(new int[]{0, 7, 7, 7, 0, 0, 7, 0, 6, 6, 6, 6, 6, 0});
         gameState.setBoard(new int[]{0, 7, 7, 7, 1, 0, 0, 6, 6, 6, 6, 6, 6, 0});
-        resultState = stateManager.play(4);
+        resultState = stateManager.play("test", 4);
         Assertions.assertArrayEquals(resultState.getBoard(), expectedState.getBoard());
         Assertions.assertEquals(resultState.getGameStatus(), expectedState.getGameStatus());
 
@@ -84,7 +87,7 @@ public class StateManagerTests {
         expectedState.setGameStatus(GameStatus.P2);
         expectedState.setBoard(new int[]{0, 7, 7, 7, 0, 0, 7, 0, 6, 6, 6, 6, 6, 0});
         gameState.setBoard(new int[]{0, 7, 7, 7, 1, 0, 0, 6, 6, 6, 6, 6, 6, 0});
-        State resultState = stateManager.play(4);
+        StateDTO resultState = stateManager.play("test",4);
         Assertions.assertArrayEquals(resultState.getBoard(), expectedState.getBoard());
         Assertions.assertEquals(resultState.getGameStatus(), expectedState.getGameStatus());
 
@@ -95,7 +98,7 @@ public class StateManagerTests {
     public void playTestIllegalBoxNumber() throws Exception{
         //illegal box number
         Throwable exception = Assertions.assertThrows(GameException.class, () -> {
-            stateManager.play(15);
+            stateManager.play("test", 15);
         });
         Assertions.assertEquals("Error :  Illegal box", exception.getMessage());
     }
@@ -105,7 +108,7 @@ public class StateManagerTests {
     public void playTestIllegalBoxForP1() throws Exception{
         //illegal box for P1
         Throwable exception = Assertions.assertThrows(GameException.class, () -> {
-            stateManager.play(10);
+            stateManager.play("test", 10);
         });
         Assertions.assertEquals("Error :  Illegal box", exception.getMessage());
     }
@@ -117,7 +120,7 @@ public class StateManagerTests {
         expectedState.setGameStatus(GameStatus.P2WON);
         gameState.setBoard(new int[]{0, 0, 0, 0, 0, 1, 7, 0, 6, 6, 6, 6, 6, 30});
         expectedState.setBoard(new int[]{0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 60});
-        State resultState = stateManager.play(5);
+        StateDTO resultState = stateManager.play("test", 5);
         Assertions.assertArrayEquals(resultState.getBoard(), expectedState.getBoard());
         Assertions.assertEquals(resultState.getGameStatus(), expectedState.getGameStatus());
 
@@ -130,7 +133,7 @@ public class StateManagerTests {
         expectedState.setGameStatus(GameStatus.TIED);
         gameState.setBoard(new int[]{0, 0, 0, 0, 0, 1, 7, 0, 1, 1, 1, 1, 1, 3});
         expectedState.setBoard(new int[]{0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 8});
-        State resultState = stateManager.play(5);
+        StateDTO resultState = stateManager.play("test", 5);
         Assertions.assertArrayEquals(resultState.getBoard(), expectedState.getBoard());
         Assertions.assertEquals(resultState.getGameStatus(), expectedState.getGameStatus());
     }

@@ -19,7 +19,6 @@ public class KalahApplicationTestConfig {
     @Bean
     public StateManager stateManager(State state){
         StateManager stateManager = new StateManager();
-        stateManager.setGameState(state);
         return stateManager;
     }
 }

@@ -1,6 +1,7 @@
 package com.gill.kalah.service;
 
 import com.gill.kalah.DAO.StateManager;
+import com.gill.kalah.DTO.StateDTO;
 import com.gill.kalah.exception.GameException;
 import com.gill.kalah.model.State;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,18 +15,18 @@ public class GameService {
 
 
 
-    public synchronized State startNewGame() throws GameException {
+    public StateDTO startNewGame() throws GameException {
         return stateManager.initializeGame();
     }
 
 
-    public synchronized State play(int box) throws  GameException {
-        return stateManager.play( box);
+    public StateDTO play(String key, int box) throws  GameException {
+        return stateManager.play( key, box);
 
     }
 
 
-    public State getGameState() {
-        return stateManager.getGameState();
+    public StateDTO getGameState( String key) {
+        return stateManager.getGameState(key);
     }
 }
