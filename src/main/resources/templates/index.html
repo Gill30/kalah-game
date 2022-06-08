@@ -1,0 +1,277 @@
+<html>
+<head xmlns:th="http://www.thymeleaf.org">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+    var winModal = undefined;
+    var ableStartIdx, ableEndIdx, disableStartIdx, disableEndIdx;
+<!--    var status = localStorage.getItem("status");-->
+<!--    var board = localStorage.getItem("board")?.split(",");-->
+    var status = '';
+    var board = []
+
+    window.onload = function() {
+    var myModalEl = document.querySelector('#winModal')
+     winModal = bootstrap.Modal.getOrCreateInstance(myModalEl)
+
+
+    $("#loader").addClass("d-none")
+    $("#gamePanel").removeClass("d-none")
+    $("#newGamebtn").removeClass("d-none")
+    updateStatus(status)
+
+    // event handler for click on box
+    $(".box").click(function(){
+        let id = this.id;
+        let url = "/play/"+id
+        $.get(url,function(data, status){
+        if(status && status == "success" && data.gameStatus && data.board){
+<!--            localStorage.setItem("status", data.gameStatus)-->
+<!--            localStorage.setItem("board", data.board)-->
+            status  = data.gameStatus
+            board = data.board;
+            if(status == "P1WON" || status == "P2WON"){
+                handleWinner(status, board);
+            }
+            updateStatus(status)
+            $("#newGamebtn").addClass("d-none")
+            $("#gameBoard").removeClass("d-none")
+            updateBoard(data.board)
+            disableOppositeBoxes(status);
+        }
+        })
+
+    })
+
+
+    $("#newGamebtn").click(startNewGame);
+    $("#newGameBtnMdl").click(startNewGame);
+    $( ".pit" ).hover( handlerIn, handlerOut )
+    };
+
+    function handleWinner(status, board){
+        if(status == "P1WON"){
+            $("#winningAnnocmnt").text("Player 1 WON !!")
+        }else if (status == "P2WON"){
+             $("#winningAnnocmnt").text("Player 2 WON !!")
+        }
+
+        $("#player1Score").text(board[6]);
+        $("#player2Score").text(board[13])
+        winModal.show();
+    }
+
+    function handlerIn(){
+        let id = parseInt(this.id);
+        if(ableStartIdx  <= id && id <= ableEndIdx){
+            this.style.backgroundColor = "lightgray !important";
+        }
+    }
+
+    function handlerOut(){
+        let id = parseInt(this.id);
+        if(ableStartIdx  <= id && id <= ableEndIdx){
+            this.style.backgroundColor = "#dee2e6 !important";
+        }
+    }
+
+    function startNewGame(){
+        $.get("/newGame",function(data, status){
+            if(status && status == "success"){
+<!--                localStorage.setItem("status", data.gameStatus)-->
+<!--                localStorage.setItem("board", data.board)-->
+                status  = data.gameStatus
+                board = data.board;
+                updateStatus(status)
+                $("#newGamebtn").addClass("d-none")
+                $("#gameBoard").removeClass("d-none")
+                updateBoard(data.board)
+                disableOppositeBoxes(status);
+            }
+
+        })
+        winModal.hide();
+    }
+
+    function updateStatus(status){
+        var statusMsg = ""
+        if(status == "null"  || status == "NEW"){
+            statusMsg = "Start Game to Play!"
+            $("#gameStatus").addClass("text-primary")
+        }else if (status == "P1"){
+            statusMsg = "PLAYER 1 TURN";
+            $("#gameStatus").addClass("text-success")
+            $("#gameStatus").removeClass("text-danger")
+        }else if (status == "P2"){
+            statusMsg = "PLAYER 2 TURN";
+            $("#gameStatus").removeClass("text-success");
+            $("#gameStatus").addClass("text-danger");
+        }else if (status == "P1WON"){
+            statusMsg = "PLAYER 1 WON !!"
+            $("#gameStatus").addClass("text-success")
+            $("#gameStatus").removeClass("text-danger")
+        }else if (status == "P2WON"){
+            statusMsg = "PLAYER 2 WON !!";
+            $("#gameStatus").removeClass("text-success");
+            $("#gameStatus").addClass("text-danger");
+        }
+        $("#gameStatus").text(statusMsg)
+    }
+
+    function disableOppositeBoxes(status){
+
+    if(status == "P1"){
+        ableStartIdx = 0;
+        ableEndIdx = 5;
+        disableStartIdx = 7;
+        disableEndIdx = 12
+    }else if(status == "P2"){
+        ableStartIdx = 7;
+        ableEndIdx = 12;
+        disableStartIdx = 0;
+        disableEndIdx = 5
+    }else{
+        ableStartIdx = 0;
+        ableEndIdx = 0;
+        disableStartIdx = 0;
+        disableEndIdx = 12
+    }
+    for(let i =ableStartIdx;i<=ableEndIdx;i++ ){
+        $("#"+i).removeClass("not-allowed")
+    }
+    for(let i =disableStartIdx;i<=disableEndIdx;i++ ){
+        $("#"+i).addClass("not-allowed")
+    }
+    }
+
+    function updateBoard(board){
+     for(let i =0; i < board.length ; i++){
+        $("#"+i).text(board[i])
+     }
+    }
+    </script>
+    <style>
+        #winModal{
+            text-align : center;
+        }
+
+        #loader{
+            position: fixed;
+            z-index: 1031;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .not-allowed {
+             cursor: not-allowed !important;
+        }
+
+        .kalah{
+            font-size: 5rem;
+            text-align: center;
+        }
+
+        .pit{
+            font-size: 1.5rem;
+            text-align: center;
+        }
+
+    </style>
+</head>
+    <body>
+    <div id="loader" class="text-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+    <div id="gamePanel" class="container d-none">
+        <div class="row justify-content-md-center">
+
+            <div class="col">
+
+            </div>
+            <div class="col-10">
+                <div class="container">
+
+                    <div class="row"><center><h1 class="display-1 mb-3 mt-3">Kalah Game</h1></center></div>
+                    <div class="row"><center><h3 id="gameStatus" class="display-4">New Game</h3></center></div>
+
+                    <div id="newGamebtn" class="row d-none text-center"><div class="justify-content-center">
+                        <button type="button" class="btn btn-primary">Start New Game</button>
+                    </div></div>
+                </div>
+                <div id="gameBoard" class="row d-none mt-5">
+                    <div id="13" class="col-2 alert alert-danger p-3 not-allowed border border-danger kalah" role="alert"></div>
+                    <div class="col-8">
+                        <div class="row p-3">
+                            <div  class="col-2 justify-content-center" >
+                                <div  id="12" class="box p-3 border col-10 bg-danger text-white border-primary pit" ></div>
+                            </div>
+                            <div  class="col-2 justify-content-center" >
+                                <div  id="11" class="box p-3 border col-10 bg-danger text-white border-primary pit"></div>
+                            </div>
+                            <div  class="col-2 justify-content-center" >
+                                <div  id="10" class="box p-3 border col-10 bg-danger text-white border-primary pit"></div>
+                            </div>
+                            <div  class="col-2 justify-content-center" >
+                                <div  id="9" class="box p-3 border col-10 bg-danger text-white border-primary pit"></div>
+                            </div>
+                            <div  class="col-2 justify-content-center" >
+                                <div  id="8" class="box p-3 border col-10 bg-danger text-white border-primary pit"></div>
+                            </div>
+                            <div  class="col-2 justify-content-center" >
+                                <div  id="7" class="box p-3 border col-10 bg-danger text-white border-primary pit"></div>
+                            </div>
+                        </div>
+                        <div class="row p-3">
+                            <div  class="col-2 justify-content-center" >
+                                <div  id="0" class="box p-3 border col-10 bg-success text-white border-primary pit"></div>
+                            </div>
+                            <div  class="col-2 justify-content-center" >
+                                <div  id="1" class="box p-3 border col-10 bg-success text-white border-primary pit"></div>
+                            </div>
+                            <div  class="col-2 justify-content-center" >
+                                <div  id="2" class="box p-3 border col-10 bg-success text-white border-primary pit"></div>
+                            </div>
+                            <div  class="col-2 justify-content-center" >
+                                <div  id="3" class="box p-3 border col-10 bg-success text-white border-primary pit"></div>
+                            </div>
+                            <div  class="col-2 justify-content-center" >
+                                <div  id="4" class="box p-3 border col-10 bg-success text-white border-primary pit"></div>
+                            </div>
+                            <div  class="col-2 justify-content-center" >
+                                <div  id="5" class="box p-3 border col-10 bg-success text-white  border-primary pit"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="6" class="col-2 alert alert-danger p-3 not-allowed kalah border border-danger" role="alert"></div>
+                </div>
+            </div>
+            <div class="col">
+
+            </div>
+        </div>
+    </div>
+    <div id="winModal" class="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"> ->>>> Game Over <<<<- </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h1 id="winningAnnocmnt" class="display-1 text-danger"></h1>
+                    <p class="display-4">Player 1 Score :<Span id="player1Score"></Span></p>
+                    <p class="display-4">Player 2 Score :<Span id="player2Score"></Span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="newGameBtnMdl" class="btn btn-primary">Start New Game</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </body>
+</html>
